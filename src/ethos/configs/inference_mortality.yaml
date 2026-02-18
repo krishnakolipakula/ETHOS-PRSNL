@@ -1,0 +1,25 @@
+# Inference config for hospital mortality prediction
+task: "hospital_mortality"
+model_fp: "out/sample_model/best_model.pt"
+input_dir: "data/tokenized/mimic"
+output_dir: "results/MORTALITY"
+output_fn: "sample_run"
+
+temperature: 1.0
+dataset_kwargs: null
+subset: null
+rep_num: 1
+save_generated_tokens: true
+
+device: "cuda"
+n_jobs: 1
+n_gpus: 1
+no_compile: true
+
+result_chunk_size: 128000
+chunksize: 1
+timeout: 300
+seed: 42
+
+hydra:
+  output_subdir: null

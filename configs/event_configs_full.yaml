@@ -1,0 +1,162 @@
+# MIMIC-IV Event Configuration - FULL VERSION
+# Includes 12 tables: 5 original + ICU module + additional hosp features
+# Created: February 4, 2026
+# Purpose: Extract comprehensive clinical data for improved model performance
+
+patient_id_col: subject_id
+
+# ============================================================
+# HOSP MODULE - 8 TABLES (Original 5 + 3 Additional)
+# ============================================================
+hosp:
+  # -------------------- ORIGINAL 5 TABLES --------------------
+  
+  # 1. Admissions - Hospital stays
+  admissions:
+    ts_col: admittime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: HOSPITAL_ADMISSION
+    end_ts_col: dischtime
+    metadata:
+      - admission_type
+      - admission_location
+      - discharge_location
+      - insurance
+      - language
+      - marital_status
+      - race
+  
+  # 2. Diagnoses ICD - Diagnosis codes
+  diagnoses_icd:
+    ts_col: null
+    event_type: col(icd_code)
+    metadata:
+      - icd_version
+  
+  # 3. Prescriptions - Medication orders
+  prescriptions:
+    ts_col: starttime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(drug)
+    end_ts_col: stoptime
+    metadata:
+      - dose_val_rx
+      - dose_unit_rx
+      - route
+      - drug_type
+      - formulary_drug_cd
+  
+  # 4. DRG Codes - Billing codes
+  drgcodes:
+    ts_col: null
+    event_type: col(drg_code)
+    metadata:
+      - drg_severity
+      - drg_mortality
+  
+  # 5. Patients - Demographics (already in MEDS patient table)
+  # Not included here as it's handled separately
+  
+  # -------------------- ADDITIONAL 3 HOSP TABLES --------------------
+  
+  # 6. Lab Events - Laboratory results (IMPORTANT)
+  labevents:
+    ts_col: charttime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(itemid)  # Lab test type
+    metadata:
+      - value
+      - valuenum
+      - valueuom
+      - flag  # Abnormal flag
+      - priority
+  
+  # 7. Procedures ICD - ICD procedure codes
+  procedures_icd:
+    ts_col: null
+    event_type: col(icd_code)
+    metadata:
+      - icd_version
+  
+  # 8. Services - Department transfers
+  services:
+    ts_col: transfertime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(curr_service)
+    metadata:
+      - prev_service
+
+# ============================================================
+# ICU MODULE - 4 TABLES
+# ============================================================
+icu:
+  # 9. ICU Stays - ICU admission/discharge
+  icustays:
+    ts_col: intime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: ICU_ADMISSION
+    end_ts_col: outtime
+    metadata:
+      - first_careunit
+      - last_careunit
+      - los  # Length of stay
+  
+  # 10. Chart Events - Vitals and measurements (LARGE - be selective)
+  chartevents:
+    ts_col: charttime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(itemid)  # Measurement type
+    metadata:
+      - value
+      - valuenum
+      - valueuom
+    # Note: This table is huge. Consider filtering by itemid for common vitals:
+    # Heart rate, BP, Temperature, SpO2, Respiratory rate, GCS
+  
+  # 11. Procedure Events - ICU procedures
+  procedureevents:
+    ts_col: starttime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(itemid)
+    end_ts_col: endtime
+    metadata:
+      - value
+      - valueuom
+      - location
+      - ordercategoryname
+  
+  # 12. Input Events - ICU medications/fluids
+  inputevents:
+    ts_col: starttime
+    ts_format: "%Y-%m-%d %H:%M:%S"
+    event_type: col(itemid)
+    end_ts_col: endtime
+    metadata:
+      - amount
+      - amountuom
+      - rate
+      - rateuom
+      - ordercategoryname
+
+# ============================================================
+# NOTES
+# ============================================================
+# NOT INCLUDED (to keep manageable):
+# - outputevents (ICU outputs - can add if needed)
+# - datetimeevents (less common)
+# - microbiologyevents (specialized, large)
+# - pharmacy (not needed, have prescriptions)
+# - poe/poe_detail (order entry, not critical)
+# - emar/emar_detail (redundant with prescriptions)
+# - transfers (room-level, services covers department)
+
+# TOTAL TABLES: 12
+# HOSP: 8 (admissions, diagnoses_icd, prescriptions, drgcodes, labevents, procedures_icd, services)
+# ICU: 4 (icustays, chartevents, procedureevents, inputevents)
+
+# EXPECTED IMPACT:
+# - Vocabulary: ~50-60K tokens (from 39K)
+# - Events: ~50-100M events (from 21M prescriptions)
+# - Better features for ICU-specific tasks
+# - Better timestamps for all events
+# - More comprehensive clinical picture

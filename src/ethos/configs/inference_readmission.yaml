@@ -1,0 +1,25 @@
+# Inference config for readmission prediction on sample data
+task: "readmission"
+model_fp: "out/sample_model/best_model.pt"
+input_dir: "data/tokenized/mimic"
+output_dir: "results/READMISSION"
+output_fn: "sample_run"
+
+temperature: 1.0
+dataset_kwargs: null
+subset: null  # Use all test patients
+rep_num: 1
+save_generated_tokens: true
+
+device: "cuda"
+n_jobs: 1
+n_gpus: 1
+no_compile: true  # Disable for compatibility
+
+result_chunk_size: 128000
+chunksize: 1
+timeout: 300
+seed: 42
+
+hydra:
+  output_subdir: null
