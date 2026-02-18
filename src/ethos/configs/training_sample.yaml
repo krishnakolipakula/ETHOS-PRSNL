@@ -1,0 +1,44 @@
+# GPU-optimized training config for GTX 1650 (4GB VRAM) with sample data
+model_type: "decoder"
+data_fp: "data/tokenized/mimic"
+val_size: 0.1  # 10% validation split
+out_dir: "out/sample_model"
+eval_interval: 500  # More frequent eval for small dataset
+log_interval: 10
+resume: false
+
+# logging
+wandb_log: false
+wandb_project: "ethos"
+wandb_run_name: "sample_run"
+
+# training parameters - reduced for 4GB GPU
+gradient_accumulation_steps: 8  # Accumulate gradients to simulate larger batch
+batch_size: 4  # Small batch size for limited VRAM
+max_iters: 5000  # Fewer iterations for sample data
+
+# model parameters - very small model for 4GB GPU
+n_positions: 512  # Reduced sequence length
+n_layer: 2  # Only 2 layers instead of 6
+n_head: 4  # 4 attention heads
+n_embd: 128  # 128 embedding dimensions instead of 512
+dropout: 0.1
+activation: "gelu"
+
+# optimizer parameters
+lr: 0.0006
+weight_decay: 0.1
+beta1: 0.9
+beta2: 0.95
+grad_clip: 1.0
+
+# learning rate schedule
+warmup_iters: 500
+lr_decay_iters: 4000
+min_lr: 0.00006
+
+# system - use GPU with float32 for compatibility
+backend: "nccl"
+device: "cuda"
+dtype: "float32"  # float32 for GTX 1650 compatibility
+no_compile: true  # Disable torch.compile for compatibility

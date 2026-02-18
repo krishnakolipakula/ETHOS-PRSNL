@@ -1,0 +1,90 @@
+# Simplified event config for sample MIMIC dataset
+# Only includes the 5 core tables extracted in the sample
+
+subject_id_col: subject_id
+
+hosp/admissions:
+  ed_registration:
+    code: ED_REGISTRATION
+    time: col(edregtime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+  ed_out:
+    code: ED_OUT
+    time: col(edouttime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+  admission:
+    code:
+      - HOSPITAL_ADMISSION
+      - col(admission_type)
+      - col(admission_location)
+    time: col(admittime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+    insurance: insurance
+    language: language
+    marital_status: marital_status
+    race: race
+    hadm_id: hadm_id
+  discharge:
+    code:
+      - HOSPITAL_DISCHARGE
+      - col(discharge_location)
+    time: col(dischtime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+    hadm_id: hadm_id
+
+hosp/diagnoses_icd:
+  diagnosis:
+    code:
+      - DIAGNOSIS
+      - ICD
+      - col(icd_version)
+      - col(icd_code)
+    hadm_id: hadm_id
+    time: col(dischtime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+
+hosp/patients:
+  gender:
+    code:
+      - GENDER
+      - col(gender)
+    time: null
+  dob:
+    code: MEDS_BIRTH
+    time: col(year_of_birth)
+    time_format: "%Y"
+  death:
+    code: MEDS_DEATH
+    time: col(dod)
+    time_format:
+      - "%Y-%m-%d %H:%M:%S"
+      - "%Y-%m-%d"
+
+hosp/procedures_icd:
+  procedure:
+    code:
+      - PROCEDURE
+      - ICD
+      - col(icd_version)
+      - col(icd_code)
+    hadm_id: hadm_id
+    time: col(chartdate)
+    time_format: "%Y-%m-%d"
+
+icu/icustays:
+  icu_admission:
+    code:
+      - ICU_ADMISSION
+      - col(first_careunit)
+    time: col(intime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+    hadm_id: hadm_id
+    icustay_id: stay_id
+  icu_discharge:
+    code:
+      - ICU_DISCHARGE
+      - col(last_careunit)
+    time: col(outtime)
+    time_format: "%Y-%m-%d %H:%M:%S"
+    hadm_id: hadm_id
+    icustay_id: stay_id

@@ -1,0 +1,152 @@
+# MIMIC-IV Tokenization Configuration - FULL VERSION
+# Compatible with 12-table extraction (hosp + ICU modules)
+# Created: February 4, 2026
+# Purpose: Complete tokenization pipeline with ICU support
+
+defaults:
+  - _self_
+
+stages:
+  # ============================================================
+  # STAGE 1: Initial Code Filtering
+  # ============================================================
+  - filter_codes:
+      min_code_inclusion_count: 10
+      # Remove rare codes that appear <10 times
+      
+  # ============================================================
+  # STAGE 2: Preprocessing
+  # ============================================================
+  - preprocessing:
+      # Handles demographics, admissions, basic events
+      # Now includes ICU stays, services, transfers
+      
+  # ============================================================
+  # STAGE 3: ICU Processing (NEW - was removed in bare version)
+  # ============================================================
+  - icu_processing:
+      # Maps ICU careunit types (MICU, SICU, CCU, etc.)
+      # Adds ICU_ADMISSION, ICU_DISCHARGE events
+      # Calculates ICU length of stay
+      
+  # ============================================================
+  # STAGE 4: Lab Event Processing (NEW)
+  # ============================================================
+  - lab_processing:
+      # Standardize lab values
+      # Map itemid to common lab names
+      # Handle abnormal flags
+      # Common labs: CBC, BMP, LFT, Troponin, Lactate, etc.
+      
+  # ============================================================  
+  # STAGE 5: Chart Event Processing (NEW - ICU vitals)
+  # ============================================================
+  - chart_processing:
+      # Filter to essential vitals only
+      essential_vitals:
+        - 220045  # Heart Rate
+        - 220050  # Arterial Blood Pressure systolic
+        - 220051  # Arterial Blood Pressure diastolic  
+        - 220052  # Arterial Blood Pressure mean
+        - 220179  # Non Invasive Blood Pressure systolic
+        - 220180  # Non Invasive Blood Pressure diastolic
+        - 220181  # Non Invasive Blood Pressure mean
+        - 223761  # Temperature Fahrenheit
+        - 223762  # Temperature Celsius
+        - 220210  # Respiratory Rate
+        - 220277  # SpO2
+        # Add more as needed
+      # This reduces chartevents from ~300M to manageable size
+      
+  # ============================================================
+  # STAGE 6: Code Counting
+  # ============================================================
+  - CodeCounter:
+      prefix: ""
+      
+  # ============================================================
+  # STAGE 7: Static Data Collection
+  # ============================================================
+  - StaticDataCollector:
+      # Collects patient demographics
+      # Gender, age, race, insurance, etc.
+      
+  # ============================================================
+  # STAGE 8: Filter Static Codes
+  # ============================================================
+  - filter_codes:
+      min_code_inclusion_count: 1
+      # Remove codes that only appear in static data
+      
+  # ============================================================
+  # STAGE 9: ICD-9 to ICD-10 Conversion (ENABLED)
+  # ============================================================
+  - icd_conversion:
+      # Convert ICD-9 codes to ICD-10
+      # MIMIC-IV v3.1 has ICD-9, this standardizes
+      input_code_col: icd_code
+      output_code_col: icd10_code
+      
+  # ============================================================
+  # STAGE 10: Medication ATC Mapping (ENABLED)
+  # ============================================================
+  - medication_atc:
+      # Map drug names to ATC codes
+      # Standardizes medication vocabulary
+      drug_col: drug
+      
+  # ============================================================
+  # STAGE 11: Time Interval Injection
+  # ============================================================
+  - inject_time_intervals:
+      # Adds time tokens between events
+      # E.g., 1h-2h, 1d-2d, etc.
+      
+  # ============================================================
+  # STAGE 12: Interval Estimation
+  # ============================================================
+  - IntervalEstimator:
+      # Calculates time encoding parameters
+      
+  # ============================================================
+  # STAGE 13: Quantizator (ENABLED - generates Q tokens)
+  # ============================================================
+  - Quantizator:
+      num_quantiles: 10
+      # Generates Q0-Q9 tokens for age encoding
+      # This was problematic in bare version, now properly configured
+      
+  # ============================================================
+  # STAGE 14: Final Code Counting
+  # ============================================================
+  - CodeCounter:
+      prefix: "FINAL_"
+
+# ============================================================
+# CONFIGURATION NOTES
+# ============================================================
+
+# DIFFERENCES FROM BARE VERSION:
+# - Added ICU processing (stage 3)
+# - Added lab processing (stage 4)
+# - Added chart event processing (stage 5)
+# - Enabled ICD conversion (stage 9)
+# - Enabled medication ATC mapping (stage 10)
+# - Enabled Quantizator (stage 13)
+
+# EXPECTED OUTPUT:
+# - Vocabulary: 50-60K tokens (vs 39K in bare)
+# - Includes: demographics, medications, diagnoses, procedures, labs, vitals
+# - Time intervals: same as before
+# - Q tokens: Q0-Q99 (properly generated now)
+
+# TRAINING ADJUSTMENTS NEEDED:
+# - Update base.py if num_quantiles hardcoded (should use vocab now)
+# - Ensure chartevents filtering applied (or will be huge)
+# - May need more training iterations due to larger vocab
+
+# ESTIMATED RESOURCE REQUIREMENTS:
+# - Tokenization time: 4-6 hours (vs 1-2 hours for bare)
+# - Disk space: ~50-100GB tokenized data
+# - Training time: 1.5-2x longer per iteration (larger vocab)
+# - Memory: Same (still fits in GPU)
