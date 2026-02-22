@@ -167,9 +167,9 @@ class UFToETHOSConverter:
             sequences.append(sequence)
             patient_ids_list.append(patient_id)
             
-            # Add dummy static data entry (ETHOS requires this)
-            # Using a single zero value for each patient
-            static_data[patient_id] = [0]  # Minimal static feature
+            # Add empty static data entry (UF has no static features)
+            # ETHOS expects dict of dicts: {patient_id: {feature_name: {...}}}
+            static_data[patient_id] = {}  # Empty dict - no static features
         
         print(f"  Created {len(sequences):,} sequences")
         
