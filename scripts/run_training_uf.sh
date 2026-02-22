@@ -38,8 +38,7 @@ echo ""
 echo "Starting training with UF data..."
 ethos_train \
     data_fp=data/tokenized/uf_converted/train \
-    val_size=0 \
-    +val_data_fp=data/tokenized/uf_converted/val \
+    val_size=5000 \
     out_dir=outputs/$(date +%Y-%m-%d)/uf_training \
     max_iters=5000 \
     batch_size=32 \
