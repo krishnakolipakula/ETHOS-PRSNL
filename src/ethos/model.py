@@ -169,7 +169,8 @@ class GPT2LMNoBiasModel(nn.Module):
 
         if labels is not None:
             logits = self.lm_head(x)
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
+            # Ensure labels are int64 (autocast might convert to float)
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1).long())
         else:
             logits = self.lm_head(x[:, [-1], :])
             loss = None
