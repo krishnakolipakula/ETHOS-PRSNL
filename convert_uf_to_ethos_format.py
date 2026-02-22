@@ -222,8 +222,8 @@ class UFToETHOSConverter:
             'shard_size': shard_size,
             'max_seq_length': max_seq_length,
             'vocab_size': max(self.token_to_text.keys()) + 1,
-            'min_seq_len': min(seq_lengths),
-            'max_seq_len': max(seq_lengths),
+            'min_seq_len': int(min(seq_lengths)),
+            'max_seq_len': int(max(seq_lengths)),
             'mean_seq_len': float(np.mean(seq_lengths)),
             'median_seq_len': float(np.median(seq_lengths))
         }
