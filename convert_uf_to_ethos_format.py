@@ -232,6 +232,17 @@ class UFToETHOSConverter:
         with open(output_split_dir / 'metadata.json', 'w') as f:
             json.dump(metadata, f, indent=2)
         
+        # Save static_data.pickle for ETHOS (empty dict is fine)
+        import pickle
+        static_data = {}  # UF data doesn't have static patient features
+        with open(output_split_dir / 'static_data.pickle', 'wb') as f:
+            pickle.dump(static_data, f)
+        
+        # Save interval_estimates.json (optional, but avoids warning)
+        interval_estimates = {}  # No interval estimates for UF data
+        with open(output_split_dir / 'interval_estimates.json', 'w') as f:
+            json.dump(interval_estimates, f)
+        
         return metadata
     
     def convert_all_splits(self, max_seq_length=2048, shard_size=10000):
