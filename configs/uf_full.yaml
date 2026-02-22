@@ -1,0 +1,53 @@
+# UF Data Training Configuration
+# Converted UF triplet format to ETHOS sequences
+# Created: February 22, 2026
+# Vocab size: 28,578 tokens (28,572 + 6 time interval tokens)
+
+# Data paths
+train_data_path: "data/tokenized/uf_converted/train"
+val_data_path: "data/tokenized/uf_converted/val"
+
+# Model architecture (same as MIMIC-IV)
+n_layer: 6
+n_embd: 768
+n_head: 12
+n_positions: 2048
+dropout: 0.3
+activation: "gelu"
+
+# Vocabulary
+vocab_size: 28578
+
+# Training parameters
+batch_size: 32
+gradient_accumulation_steps: 8
+max_iters: 5000
+eval_interval: 500
+log_interval: 10
+
+# Optimizer
+lr: 0.0006
+min_lr: 0.00001
+weight_decay: 0.1
+beta1: 0.9
+beta2: 0.95
+grad_clip: 1.0
+
+# Learning rate schedule
+warmup_iters: 500
+lr_decay_iters: 4500
+
+# System
+backend: "nccl"
+device: "cuda"
+dtype: "bfloat16"
+no_compile: false
+
+# Logging
+wandb_log: false
+wandb_project: "ethos-uf"
+wandb_run_name: "uf_training"
+
+# Output
+out_dir: "outputs/uf_training"
+resume: false
