@@ -41,8 +41,8 @@ ethos_train \
     val_size=0.04 \
     out_dir=outputs/$(date +%Y-%m-%d)/uf_training \
     max_iters=5000 \
-    batch_size=32 \
-    gradient_accumulation_steps=8 \
+    batch_size=16 \
+    gradient_accumulation_steps=16 \
     n_layer=6 \
     n_embd=768 \
     n_head=12 \
