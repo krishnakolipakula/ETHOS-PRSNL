@@ -267,7 +267,9 @@ class UFToETHOSConverter:
     
     def save_vocabulary(self):
         """Save updated vocabulary including time interval tokens"""
-        vocab_file = self.output_dir / "vocabulary.csv"
+        # ETHOS expects vocab in train directory named vocab_t*.csv
+        train_dir = self.output_dir / "train"
+        vocab_file = train_dir / "vocab_tokens.csv"
         
         vocab_data = []
         for token_id, text in sorted(self.token_to_text.items()):
