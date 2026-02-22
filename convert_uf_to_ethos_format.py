@@ -194,11 +194,12 @@ class UFToETHOSConverter:
             
             # ETHOS expects flattened 1D arrays, not 2D padded arrays
             # Concatenate all sequences into a single flat array
-            flat_tokens = np.concatenate([np.array(seq, dtype=np.int32) for seq in shard_sequences])
-            flat_times = np.zeros(len(flat_tokens), dtype=np.int32)  # All zeros for non-temporal
+            # Use int64 for PyTorch compatibility (cross_entropy expects int64 labels)
+            flat_tokens = np.concatenate([np.array(seq, dtype=np.int64) for seq in shard_sequences])
+            flat_times = np.zeros(len(flat_tokens), dtype=np.int64)  # All zeros for non-temporal
             
             # Create patient_offsets: cumulative sequence lengths
-            seq_lengths = np.array([len(seq) for seq in shard_sequences], dtype=np.int32)
+            seq_lengths = np.array([len(seq) for seq in shard_sequences], dtype=np.int64)
             patient_offsets = np.concatenate([[0], np.cumsum(seq_lengths)[:-1]])
             
             # Convert to tensors and save
@@ -206,7 +207,7 @@ class UFToETHOSConverter:
                 'tokens': torch.from_numpy(flat_tokens),
                 'times': torch.from_numpy(flat_times),
                 'patient_offsets': torch.from_numpy(patient_offsets),
-                'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int32)
+                'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int64)
             }
             
             shard_file = output_split_dir / f"{shard_idx}.safetensors"
