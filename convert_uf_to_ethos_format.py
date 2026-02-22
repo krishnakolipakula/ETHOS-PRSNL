@@ -192,25 +192,19 @@ class UFToETHOSConverter:
             shard_sequences = sequences[start_idx:end_idx]
             shard_patient_ids = patient_ids_list[start_idx:end_idx]
             
-            # Pad sequences to same length within shard
-            shard_max_len = max(len(seq) for seq in shard_sequences)
-            padded = np.zeros((len(shard_sequences), shard_max_len), dtype=np.int32)
-            times = np.zeros((len(shard_sequences), shard_max_len), dtype=np.int32)
-            
-            for i, seq in enumerate(shard_sequences):
-                padded[i, :len(seq)] = seq
-                # Times can be zeros or cumulative; ETHOS uses zeros for non-temporal data
-                times[i, :len(seq)] = 0
+            # ETHOS expects flattened 1D arrays, not 2D padded arrays
+            # Concatenate all sequences into a single flat array
+            flat_tokens = np.concatenate([np.array(seq, dtype=np.int32) for seq in shard_sequences])
+            flat_times = np.zeros(len(flat_tokens), dtype=np.int32)  # All zeros for non-temporal
             
             # Create patient_offsets: cumulative sequence lengths
-            # This tells ETHOS where each patient's data starts
             seq_lengths = np.array([len(seq) for seq in shard_sequences], dtype=np.int32)
             patient_offsets = np.concatenate([[0], np.cumsum(seq_lengths)[:-1]])
             
             # Convert to tensors and save
             tensors = {
-                'tokens': torch.from_numpy(padded),
-                'times': torch.from_numpy(times),
+                'tokens': torch.from_numpy(flat_tokens),
+                'times': torch.from_numpy(flat_times),
                 'patient_offsets': torch.from_numpy(patient_offsets),
                 'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int32)
             }
