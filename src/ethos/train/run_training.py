@@ -107,11 +107,11 @@ def main(cfg: DictConfig):
 
     def get_batch() -> tuple[th.Tensor | tuple, th.Tensor]:
         x, y = next(train_dataloader)
-        # Ensure both inputs and labels are long (int64) to prevent autocast conversion
-        y = y.long().to(device, non_blocking=True)
+        # Move to device (casting to long now done in model forward)
+        y = y.to(device, non_blocking=True)
         if isinstance(x, list):
-            return (x[0].long().to(device, non_blocking=True), x[1].long().to(device, non_blocking=True)), y
-        return x.long().to(device, non_blocking=True), y
+            return (x[0].to(device, non_blocking=True), x[1].to(device, non_blocking=True)), y
+        return x.to(device, non_blocking=True), y
 
     iter_num, best_val_loss, best_metric_score, optimizer_state, wandb_path = 0, 1e9, 0, None, None
     if cfg.resume:

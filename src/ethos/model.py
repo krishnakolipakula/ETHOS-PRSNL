@@ -156,6 +156,11 @@ class GPT2LMNoBiasModel(nn.Module):
         return n_params
 
     def forward(self, input_ids, labels=None) -> ModelOutput:
+        # Ensure input_ids and labels are int64 (autocast converts them to float)
+        input_ids = input_ids.long()
+        if labels is not None:
+            labels = labels.long()
+            
         _, t = input_ids.size()
         if self.return_attention:
             self.attention_weights.clear()
@@ -169,8 +174,8 @@ class GPT2LMNoBiasModel(nn.Module):
 
         if labels is not None:
             logits = self.lm_head(x)
-            # Ensure labels are int64 (autocast might convert to float)
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1).long())
+            # Labels already cast to long above
+            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), labels.view(-1))
         else:
             logits = self.lm_head(x[:, [-1], :])
             loss = None
