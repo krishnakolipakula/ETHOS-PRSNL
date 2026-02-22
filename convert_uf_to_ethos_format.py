@@ -190,13 +190,17 @@ class UFToETHOSConverter:
             # Pad sequences to same length within shard
             shard_max_len = max(len(seq) for seq in shard_sequences)
             padded = np.zeros((len(shard_sequences), shard_max_len), dtype=np.int32)
+            times = np.zeros((len(shard_sequences), shard_max_len), dtype=np.int32)
             
             for i, seq in enumerate(shard_sequences):
                 padded[i, :len(seq)] = seq
+                # Times can be zeros or cumulative; ETHOS uses zeros for non-temporal data
+                times[i, :len(seq)] = 0
             
             # Convert to tensors and save
             tensors = {
                 'tokens': torch.from_numpy(padded),
+                'times': torch.from_numpy(times),
                 'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int32)
             }
             
