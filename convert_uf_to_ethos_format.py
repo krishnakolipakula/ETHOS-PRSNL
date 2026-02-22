@@ -197,10 +197,16 @@ class UFToETHOSConverter:
                 # Times can be zeros or cumulative; ETHOS uses zeros for non-temporal data
                 times[i, :len(seq)] = 0
             
+            # Create patient_offsets: cumulative sequence lengths
+            # This tells ETHOS where each patient's data starts
+            seq_lengths = np.array([len(seq) for seq in shard_sequences], dtype=np.int32)
+            patient_offsets = np.concatenate([[0], np.cumsum(seq_lengths)[:-1]])
+            
             # Convert to tensors and save
             tensors = {
                 'tokens': torch.from_numpy(padded),
                 'times': torch.from_numpy(times),
+                'patient_offsets': torch.from_numpy(patient_offsets),
                 'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int32)
             }
             
