@@ -25,7 +25,6 @@ echo ""
 
 # Setup environment
 module load python/3.11
-module load cuda/12.1.0
 source venv/bin/activate
 
 echo "Python version: $(python --version)"
@@ -37,21 +36,27 @@ echo ""
 
 # Train with UF config
 echo "Starting training with UF data..."
-python -m src.ethos.train \
-    --config configs/uf_full.yaml \
-    --train_data_path data/tokenized/uf_converted/train \
-    --val_data_path data/tokenized/uf_converted/val \
-    --vocab_size 28578 \
-    --output_dir outputs/$(date +%Y-%m-%d)/uf_training \
-    --max_iters 5000 \
-    --batch_size 32 \
-    --gradient_accumulation_steps 8 \
-    --n_layer 6 \
-    --n_embd 768 \
-    --n_head 12 \
-    --dropout 0.3 \
-    --lr 0.0006 \
-    --min_lr 0.00001
+ethos_train \
+    data_fp=data/tokenized/uf_converted/train \
+    val_size=6 \
+    out_dir=outputs/$(date +%Y-%m-%d)/uf_training \
+    max_iters=5000 \
+    batch_size=32 \
+    gradient_accumulation_steps=8 \
+    n_layer=6 \
+    n_embd=768 \
+    n_head=12 \
+    n_positions=2048 \
+    dropout=0.3 \
+    lr=0.0006 \
+    min_lr=0.00001 \
+    eval_interval=500 \
+    log_interval=10 \
+    warmup_iters=500 \
+    lr_decay_iters=4500 \
+    device=cuda \
+    dtype=bfloat16 \
+    wandb_log=false
 
 echo ""
 echo "========================================"
