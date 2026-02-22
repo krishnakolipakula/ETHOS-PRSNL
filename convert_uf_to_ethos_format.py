@@ -154,7 +154,8 @@ class UFToETHOSConverter:
         # Convert each patient to sequence
         print("\nCreating ETHOS sequences...")
         sequences = []
-        patient_ids = []
+        patient_ids_list = []
+        static_data = {}  # For static_data.pickle
         
         for patient_id, records in tqdm(patients.items(), desc="Building sequences"):
             sequence = self.create_patient_sequence(records)
@@ -164,7 +165,11 @@ class UFToETHOSConverter:
                 sequence = sequence[:max_seq_length]
             
             sequences.append(sequence)
-            patient_ids.append(patient_id)
+            patient_ids_list.append(patient_id)
+            
+            # Add dummy static data entry (ETHOS requires this)
+            # Using a single zero value for each patient
+            static_data[patient_id] = [0]  # Minimal static feature
         
         print(f"  Created {len(sequences):,} sequences")
         
@@ -185,7 +190,7 @@ class UFToETHOSConverter:
             end_idx = min(start_idx + shard_size, len(sequences))
             
             shard_sequences = sequences[start_idx:end_idx]
-            shard_patient_ids = patient_ids[start_idx:end_idx]
+            shard_patient_ids = patient_ids_list[start_idx:end_idx]
             
             # Pad sequences to same length within shard
             shard_max_len = max(len(seq) for seq in shard_sequences)
@@ -232,9 +237,9 @@ class UFToETHOSConverter:
         with open(output_split_dir / 'metadata.json', 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        # Save static_data.pickle for ETHOS (empty dict is fine)
+        # Save static_data.pickle for ETHOS
+        # Each patient needs a static feature entry (using minimal dummy data)
         import pickle
-        static_data = {}  # UF data doesn't have static patient features
         with open(output_split_dir / 'static_data.pickle', 'wb') as f:
             pickle.dump(static_data, f)
         
