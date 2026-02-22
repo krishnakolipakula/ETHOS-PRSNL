@@ -196,7 +196,7 @@ class UFToETHOSConverter:
             
             # Convert to tensors and save
             tensors = {
-                'input_ids': torch.from_numpy(padded),
+                'tokens': torch.from_numpy(padded),
                 'patient_ids': torch.tensor(shard_patient_ids, dtype=torch.int32)
             }
             
