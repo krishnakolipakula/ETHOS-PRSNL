@@ -95,17 +95,36 @@ def main():
     print(f"  Train dir: {train_data_dir}")
     print(f"  Test dir: {test_data_dir}")
     
+    # Load train dataset to get vocab
     train_dataset = TimelineDataset(
         train_data_dir,
         n_positions=n_positions,
         is_encoder_decoder=False,
     )
     
+    vocab = train_dataset.vocab
+    print(f"  Vocabulary size: {len(vocab)}")
+    
     # Split train into train/val (same as training)
     val_size = 0.04  # Same as training
     train_dataset, val_dataset = train_dataset.train_test_split(val_size)
     
-    # Load test dataset separately
+    # Load test dataset with the same vocab
+    # Copy vocab file to test directory if needed
+    import shutil
+    from pathlib import Path
+    test_path = Path(test_data_dir)
+    train_path = Path(train_data_dir)
+    
+    # Find vocab file in train directory
+    vocab_files = list(train_path.glob("vocab_t*.csv"))
+    if vocab_files:
+        vocab_src = vocab_files[0]
+        vocab_dst = test_path / vocab_src.name
+        if not vocab_dst.exists():
+            print(f"  Copying vocab file to test directory...")
+            shutil.copy(vocab_src, vocab_dst)
+    
     test_dataset = TimelineDataset(
         test_data_dir,
         n_positions=n_positions,
