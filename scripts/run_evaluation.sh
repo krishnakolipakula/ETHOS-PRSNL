@@ -6,10 +6,9 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32gb
-#SBATCH --time=1:00:00
-#SBATCH --partition=hpg-turin
-#SBATCH --gres=gpu:l4:1
-#SBATCH --qos=yonghui.wu-b
+#SBATCH --time=0:30:00
+#SBATCH --partition=hpg-default
+#SBATCH --account=yonghui.wu
 
 cd /blue/yonghui.wu/kolipakulak/ethos-ares
 source venv/bin/activate
