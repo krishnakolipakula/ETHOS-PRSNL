@@ -4,40 +4,38 @@ Evaluate trained model on test set.
 Calculates perplexity and loss on held-out test data.
 """
 
-import os
-import sys
 import torch
 import numpy as np
-from pathlib import Path
+from torch.utils.data import DataLoader
 
 from ethos.utils import load_model_checkpoint
-from ethos.data.dataloader import get_batch
+from ethos.datasets import TimelineDataset
 
 
-def evaluate_on_split(model, data_dir, device, eval_iters=100, batch_size=16, block_size=2047):
-    """Evaluate model on a data split."""
+def evaluate_on_dataset(model, dataloader, device, eval_iters=200):
+    """Evaluate model on a dataset."""
     model.eval()
     losses = []
     
-    print(f"Evaluating on {data_dir}")
-    print(f"  eval_iters: {eval_iters}")
-    print(f"  batch_size: {batch_size}")
-    print(f"  block_size: {block_size}")
+    print(f"Evaluating with {eval_iters} iterations")
     
     with torch.no_grad():
-        for k in range(eval_iters):
-            try:
-                X, Y = get_batch(
-                    data_dir=data_dir,
-                    batch_size=batch_size,
-                    block_size=block_size,
-                    device=device
-                )
+        for k, (x, y) in enumerate(dataloader):
+            if k >= eval_iters:
+                break
                 
-                logits, loss = model(X, Y)
+            try:
+                # Move to device
+                y = y.to(device, non_blocking=True)
+                if isinstance(x, list):
+                    x = (x[0].to(device, non_blocking=True), x[1].to(device, non_blocking=True))
+                else:
+                    x = x.to(device, non_blocking=True)
+                
+                logits, loss = model(x, y)
                 losses.append(loss.item())
                 
-                if (k + 1) % 10 == 0:
+                if (k + 1) % 20 == 0:
                     print(f"  Iter {k+1}/{eval_iters}: loss = {loss.item():.4f}")
                     
             except Exception as e:
@@ -67,15 +65,20 @@ def evaluate_on_split(model, data_dir, device, eval_iters=100, batch_size=16, bl
 def main():
     # Paths
     checkpoint_path = "outputs/2026-02-22/uf_training/best_model.pt"
+    train_data_dir = "data/tokenized/uf_converted/train"
     test_data_dir = "data/tokenized/uf_converted/test"
-    val_data_dir = "data/tokenized/uf_converted/val"
+    
+    # Config
+    batch_size = 16
+    n_positions = 2047
+    eval_iters = 200
     
     # Device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
     
     # Load checkpoint using ETHOS utility
-    print(f"Loading checkpoint from {checkpoint_path}")
+    print(f"\nLoading checkpoint from {checkpoint_path}")
     model, checkpoint = load_model_checkpoint(checkpoint_path, map_location=device)
     
     # Print checkpoint info
@@ -87,32 +90,56 @@ def main():
     model.to(device)
     model.eval()
     
-    # Evaluation parameters
-    eval_iters = 200  # More iterations for stable estimate
-    batch_size = 16   # Same as training
-    block_size = 2047  # Same as training
+    # Load datasets
+    print(f"\nLoading datasets...")
+    print(f"  Train dir: {train_data_dir}")
+    print(f"  Test dir: {test_data_dir}")
+    
+    train_dataset = TimelineDataset(
+        train_data_dir,
+        n_positions=n_positions,
+        is_encoder_decoder=False,
+    )
+    
+    # Split train into train/val (same as training)
+    val_size = 0.04  # Same as training
+    train_dataset, val_dataset = train_dataset.train_test_split(val_size)
+    
+    # Load test dataset separately
+    test_dataset = TimelineDataset(
+        test_data_dir,
+        n_positions=n_positions,
+        is_encoder_decoder=False,
+    )
+    
+    # Create dataloaders
+    val_dataloader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+    )
+    
+    test_dataloader = DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+    )
+    
+    print(f"\nDataset sizes:")
+    print(f"  Validation: {len(val_dataset)} samples")
+    print(f"  Test: {len(test_dataset)} samples")
     
     # Evaluate on validation set (sanity check)
     print("\n" + "="*60)
     print("VALIDATION SET EVALUATION (sanity check)")
     print("="*60)
-    val_results = evaluate_on_split(
-        model, val_data_dir, device, 
-        eval_iters=eval_iters,
-        batch_size=batch_size,
-        block_size=block_size
-    )
+    val_results = evaluate_on_dataset(model, val_dataloader, device, eval_iters=eval_iters)
     
     # Evaluate on test set
     print("\n" + "="*60)
     print("TEST SET EVALUATION (final performance)")
     print("="*60)
-    test_results = evaluate_on_split(
-        model, test_data_dir, device,
-        eval_iters=eval_iters,
-        batch_size=batch_size,
-        block_size=block_size
-    )
+    test_results = evaluate_on_dataset(model, test_dataloader, device, eval_iters=eval_iters)
     
     # Summary
     print("\n" + "="*60)
