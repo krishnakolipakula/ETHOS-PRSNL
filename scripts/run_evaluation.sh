@@ -7,8 +7,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32gb
 #SBATCH --time=1:00:00
-#SBATCH --partition=gpu
-#SBATCH --gres=gpu:a100:1
+#SBATCH --partition=hpg-turin
+#SBATCH --gres=gpu:l4:1
 #SBATCH --qos=yonghui.wu-b
 
 cd /blue/yonghui.wu/kolipakulak/ethos-ares
