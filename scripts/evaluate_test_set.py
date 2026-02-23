@@ -10,11 +10,8 @@ import torch
 import numpy as np
 from pathlib import Path
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from src.ethos.utils import load_model_checkpoint
-from src.ethos.data.dataloader import get_batch
+from ethos.utils import load_model_checkpoint
+from ethos.data.dataloader import get_batch
 
 
 def evaluate_on_split(model, data_dir, device, eval_iters=100, batch_size=16, block_size=2047):
