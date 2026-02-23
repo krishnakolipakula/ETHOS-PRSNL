@@ -13,21 +13,8 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.ethos.model import GPT, GPTConfig
+from src.ethos.utils import load_model_checkpoint
 from src.ethos.data.dataloader import get_batch
-
-
-def load_checkpoint(checkpoint_path):
-    """Load model checkpoint."""
-    print(f"Loading checkpoint from {checkpoint_path}")
-    ckpt = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-    
-    # Print checkpoint info
-    print(f"Checkpoint info:")
-    print(f"  Iteration: {ckpt.get('iter_num', 'N/A')}")
-    print(f"  Best val loss: {ckpt.get('best_val_loss', 'N/A'):.4f}")
-    
-    return ckpt
 
 
 def evaluate_on_split(model, data_dir, device, eval_iters=100, batch_size=16, block_size=2047):
@@ -90,26 +77,18 @@ def main():
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     print(f"Using device: {device}")
     
-    # Load checkpoint
-    ckpt = load_checkpoint(checkpoint_path)
+    # Load checkpoint using ETHOS utility
+    print(f"Loading checkpoint from {checkpoint_path}")
+    model, checkpoint = load_model_checkpoint(checkpoint_path, map_location=device)
     
-    # Create model from checkpoint config
-    model_config = ckpt['model_config']
-    print(f"\nModel config:")
-    for k, v in model_config.items():
-        print(f"  {k}: {v}")
+    # Print checkpoint info
+    print(f"\nCheckpoint info:")
+    print(f"  Iteration: {checkpoint.get('iter_num', 'N/A')}")
+    print(f"  Best val loss: {checkpoint.get('best_val_loss', 'N/A'):.4f}")
+    print(f"  Model parameters: {model.num_parameters() / 1e6:.2f}M")
     
-    # Initialize model
-    gptconf = GPTConfig(**model_config)
-    model = GPT(gptconf)
-    
-    # Load weights
-    model.load_state_dict(ckpt['model'])
     model.to(device)
     model.eval()
-    
-    print(f"\nModel loaded successfully")
-    print(f"Total parameters: {sum(p.numel() for p in model.parameters()) / 1e6:.2f}M")
     
     # Evaluation parameters
     eval_iters = 200  # More iterations for stable estimate
@@ -143,8 +122,8 @@ def main():
     print("SUMMARY")
     print("="*60)
     print(f"Checkpoint: {checkpoint_path}")
-    print(f"Iteration: {ckpt.get('iter_num', 'N/A')}")
-    print(f"Training best val loss: {ckpt.get('best_val_loss', 'N/A'):.4f}")
+    print(f"Iteration: {checkpoint.get('iter_num', 'N/A')}")
+    print(f"Training best val loss: {checkpoint.get('best_val_loss', 'N/A'):.4f}")
     
     if val_results:
         print(f"\nValidation set (re-evaluated):")
