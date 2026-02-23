@@ -4,9 +4,9 @@
 #SBATCH --error=logs/eval_uf_gpu_%j.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=32gb
-#SBATCH --time=1:00:00
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16gb
+#SBATCH --time=0:30:00
 #SBATCH --partition=hpg-turin
 #SBATCH --gres=gpu:l4:1
 #SBATCH --qos=yonghui.wu-b
