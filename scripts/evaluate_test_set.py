@@ -72,7 +72,7 @@ def main():
     # Config
     batch_size = 16
     n_positions = 2047
-    eval_iters = 200
+    eval_iters = 50  # Reduced from 200 for faster CPU evaluation
     
     # Device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
