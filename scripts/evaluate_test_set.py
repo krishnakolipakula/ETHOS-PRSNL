@@ -32,7 +32,8 @@ def evaluate_on_dataset(model, dataloader, device, eval_iters=200):
                 else:
                     x = x.to(device, non_blocking=True)
                 
-                logits, loss = model(x, y)
+                output = model(x, y)
+                loss = output.loss
                 losses.append(loss.item())
                 
                 if (k + 1) % 20 == 0:
