@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --job-name=eval_uf_cpu
+#SBATCH --output=logs/eval_uf_cpu_%j.out
+#SBATCH --error=logs/eval_uf_cpu_%j.err
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64gb
+#SBATCH --time=2:00:00
+#SBATCH --partition=hpg-default
+#SBATCH --qos=yonghui.wu-b
+
+cd /blue/yonghui.wu/kolipakulak/ethos-ares
+source venv/bin/activate
+
+echo "Starting CPU evaluation at $(date)"
+echo "Job ID: $SLURM_JOB_ID"
+echo "Running on: $(hostname)"
+
+python scripts/evaluate_test_set.py
+
+echo "Evaluation completed at $(date)"
